@@ -1,4 +1,4 @@
-.b
+.buttons
 {
     padding: 1em 1em;
     font-size: 30px;
@@ -12,11 +12,11 @@
     margin: 0 auto;
     text-align: center;
 }
-.b:hover
+.buttons:hover
 {
     background-color: skyblue;
 }
-.buta2
+.now
 {
     text-align: center;
     font-size: 20px;
