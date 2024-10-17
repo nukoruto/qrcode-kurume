@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link href="reset.css" rel="stylesheet">
+        <link href="index.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="buta">
+            <a class="b" href="#">点検簿</a>
+            <a class="b" href="#">修繕履歴</a>
+            <a class="b" href="#">不具合報告</a>
+            <a class="b" href="#">マニュアル</a>
+            <a class="b" href="#">カメラ</a>
+        </div>
+        <footer>
+            <div class="buta2">
+                <span id="real-time"></span>
+            </div>
+            <script>
+                function Time()
+                {
+                    var realTime = new Date();
+                    var hour = realTime.getHours();
+                    var minutes = realTime.getMinutes();
+                    var seconds = realTime.getSeconds();
+                    var text = hour + ":" + minutes + ":" + seconds;
+                    document.getElementById("real-time").innerHTML = text;
+                }
+                setInterval('Time()',1000);
+            </script>
+        </footer>
+    </body>
+</html>
