@@ -1,52 +1,48 @@
-# Prerequisites
-*.d
-
-# Object files
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
-*.ko
-*.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
 *.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
 *.so
-*.so.*
-*.dylib
 
-# Executables
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
 *.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+*.test
+*.prof
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# WebStorm
+*.iml
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+# Directory-based project format:
+.idea/
+.idea/workspace.xml
+**/.idea/workspace.xml
+
+# mac hidden files
+.DS_Store
+
+##other
+#node_modules/
+#bower_components/
+.tmp
+#.sass-cache
+#builds/**/images/*
+#*.ogg
+#*.mp3
+#*.mp4
+#*.png
+#*.jpeg
+*.psd
