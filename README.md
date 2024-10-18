@@ -4,17 +4,20 @@ markdown記法:https://qiita.com/Qiita/items/c686397e4a0f4f11683d
 ## ログ
 10/10:リポジトリ作成  
 10/15:要件定義(11:00～:久留米市環境部施設課(杉谷埋立地):藤田様)  
+10/17:デモ版作成
 
 ## 目次
 
 ## プロジェクトについて
 **日常点検簿やマニュアルのQRコード化**
 ## 環境
-<img src="https://img.shields.io/badge/-C-339933.svg?logo=&style=for-the-badge">
+<img src="https://img.shields.io/badge/-Html-E34F26.svg?logo=&style=for-the-badge"> <img src="https://img.shields.io/badge/-Css-1572B6.svg?logo=&style=for-the-badge"> <img src="https://img.shields.io/badge/-Javascript-F7DF1E.svg?logo=&style=for-the-badge">
 
+## vscodeの機能を用いる場合  
+### ブランチの作り方及びマージ  
+https://www.kagoya.jp/howto/rentalserver/webtrend/vscode/
 
-
-## gitコマンド
+## gitコマンドを用いる場合
 
 ### 開発する時の流れ
 ```
