@@ -1,0 +1,15 @@
+{
+  "name": "dev",
+  "version": "1.0.0",
+  "description": "カスタムアイコン:https://t8csp.csb.app/  \r markdown記法:https://qiita.com/Qiita/items/c686397e4a0f4f11683d\r ## ログ\r 10/10:リポジトリ作成  \r 10/15:要件定義(11:00～:久留米市環境部施設課(杉谷埋立地):藤田様)",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.1"
+  }
+}
