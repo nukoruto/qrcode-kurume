@@ -30,6 +30,6 @@ app.get('/', (req, res) => {
 });
 
 // サーバー起動
-app.listen(port, localIP, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server running at http://${localIP}:${port}/`);
 });

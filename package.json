@@ -10,7 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "electron": "^33.0.1",
     "express": "^4.21.1",
-    "ip": "^2.0.1"
+    "ip": "^2.0.1",
+    "sqlite3": "^5.1.7"
   }
 }

@@ -11,7 +11,15 @@ markdown記法:https://qiita.com/Qiita/items/c686397e4a0f4f11683d
 ## プロジェクトについて
 **日常点検簿やマニュアルのQRコード化**
 ## 環境
-<img src="https://img.shields.io/badge/-Html-E34F26.svg?logo=&style=for-the-badge"> <img src="https://img.shields.io/badge/-Css-1572B6.svg?logo=&style=for-the-badge"> <img src="https://img.shields.io/badge/-Javascript-F7DF1E.svg?logo=&style=for-the-badge">
+<img src="https://img.shields.io/badge/Node.js-v20.18.0-339933.svg?logo=node.js&style=plastic">
+<img src="https://img.shields.io/badge/-Html5-E34F26.svg?logo=html5&style=plastic">
+<img src="https://img.shields.io/badge/-Css3-1572B6.svg?logo=css3&style=plastic">
+
+## コマンド
+**electronでデスクトップアプリ化する**
+```
+npx electron ./public
+```
 
 ## vscodeの機能を用いる場合  
 ### ブランチの作り方及びマージ  
