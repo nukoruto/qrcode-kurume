@@ -1,5 +1,6 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const child_process = require('child_process');
 
 // サーバーをバックグラウンドで実行
@@ -11,7 +12,9 @@ function createWindow() {
     width: 800,
     height: 600,
     webPreferences: {
-      nodeIntegration: true,  // RendererプロセスでNode.jsモジュールを使用
+        preload: path.join(__dirname, 'preload.js'),  // preloadスクリプトを指定
+        nodeIntegration: true,  // RendererプロセスでNode.jsモジュールを使用
+        contextIsolation: true,
     }
   });
 
@@ -41,12 +44,40 @@ app.on('ready', () => {
   createWindow();
 });
 
-// 全てのウィンドウが閉じられた時の処理
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-  if (serverProcess) {
-    serverProcess.kill();
+
+// 画像保存ディレクトリの設定（例：ユーザーのピクチャフォルダ）
+const saveDirectory = 'C:\\Users\\df360\\Pictures\\demo';
+
+// Electronの初期化が完了したときにディレクトリがなければ作成
+app.on('ready', () => {
+  if (!fs.existsSync(saveDirectory)) {
+    fs.mkdirSync(saveDirectory, {recursive: true});
   }
 });
+
+// 画像保存処理
+ipcMain.on('save-image', (event, imageDataUrl) => {
+    console.log("Received image data");  // イベントがトリガーされたか確認
+  
+    const base64Data = imageDataUrl.replace(/^data:image\/png;base64,/, "");
+    const filePath = path.join(saveDirectory, `image_${Date.now()}.png`);
+  
+    fs.writeFile(filePath, base64Data, 'base64', (err) => {
+      if (err) {
+        console.error('Failed to save image:', err);
+      } else {
+        console.log('Image saved to', filePath);
+      }
+    });
+  });
+  
+
+// 全てのウィンドウが閉じられた時の処理
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+    if (serverProcess) {
+      serverProcess.kill();
+    }
+  });

@@ -15,6 +15,12 @@ markdown記法:https://qiita.com/Qiita/items/c686397e4a0f4f11683d
 <img src="https://img.shields.io/badge/-Html5-E34F26.svg?logo=html5&style=plastic">
 <img src="https://img.shields.io/badge/-Css3-1572B6.svg?logo=css3&style=plastic">
 
+├── electron@33.0.1
+├── express@4.21.1
+├── ip@2.0.1
+├── multer@1.4.5-lts.1
+└── sqlite3@5.1.7
+
 ## コマンド
 **electronでデスクトップアプリ化する**
 ```
