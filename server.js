@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const bonjour = require('bonjour')();  // bonjourパッケージの読み込み
+const os = require('os');
 
 const app = express();
 const port = 3002;
@@ -11,8 +12,16 @@ const port = 3002;
 // publicディレクトリを静的ファイルのルートディレクトリとして指定
 app.use(express.static('public'));
 
-// 画像保存ディレクトリを指定
-const saveDirectory = 'C:\\Users\\df360\\Pictures\\demo';
+// 実行中のユーザーのホームディレクトリを取得
+const userHomeDir = os.homedir();
+
+// 画像保存ディレクトリを指定（ユーザーのPicturesフォルダ内）
+const saveDirectory = path.join(userHomeDir, 'Pictures', 'demo');
+
+// ディレクトリが存在しない場合は作成
+if (!fs.existsSync(saveDirectory)) {
+    fs.mkdirSync(saveDirectory, { recursive: true });
+}
 
 // multerの設定
 const storage = multer.diskStorage({
