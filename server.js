@@ -1,28 +1,12 @@
-//importみたいなしりーず
+// 必要なモジュールの読み込み
 const express = require('express');
-const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const bonjour = require('bonjour')();  // bonjourパッケージの読み込み
+
 const app = express();
 const port = 3002;
-
-// Wi-FiアダプタのIPv4アドレスを取得する関数
-function getWifiIPAddress() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-      if (name.includes('Wi-Fi') || name.includes('Wireless')) {
-          for (const iface of interfaces[name]) {
-              if (iface.family === 'IPv4' && !iface.internal) {
-                  return iface.address;
-              }
-          }
-      }
-  }
-  return '127.0.0.1';
-}
-
-const localIP = getWifiIPAddress();
 
 // publicディレクトリを静的ファイルのルートディレクトリとして指定
 app.use(express.static('public'));
@@ -50,6 +34,9 @@ app.post('/upload-image', upload.single('image'), (req, res) => {
 
 // サーバー起動
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running at http://${localIP}:${port}/`);
-});
+  console.log(`Server running at http://localhost:${port}/`);
 
+  // mDNS (Bonjour) でサービスをアナウンス
+  bonjour.publish({ name: 'qr-tenken', type: 'http', port: port });
+  console.log(`mDNS service published for qr-tenken.local on port ${port}`);
+});
