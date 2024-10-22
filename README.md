@@ -1,6 +1,19 @@
-## ヘルプ
-カスタムアイコン:https://t8csp.csb.app/  
-markdown記法:https://qiita.com/Qiita/items/c686397e4a0f4f11683d
+### 使用するコマンド
+初心者向け:ブランチの使い方(下のほうのブランチの活用方法ってとこ)  
+https://www.kagoya.jp/howto/rentalserver/webtrend/vscode/
+周りの変更を確認したいとき  
+https://envader.plus/article/368
+**electronでデスクトップアプリ化する**
+```
+npm start
+```
+なお、ディレクトリはリポジトリのホームディレクトリで実行
+**パッケージに変更・追加があった場合**
+```
+npm install
+```
+**htmlの画面を確認したい場合**
+.htmlを開き、エディター部分で右クリック→プレビューの表示(view preview)
 ## ログ
 10/10:リポジトリ作成  
 10/15:要件定義(11:00～:久留米市環境部施設課(杉谷埋立地):藤田様)  
@@ -15,22 +28,14 @@ markdown記法:https://qiita.com/Qiita/items/c686397e4a0f4f11683d
 <img src="https://img.shields.io/badge/Node.js-v20.18.0-339933.svg?logo=node.js&style=plastic">
 <img src="https://img.shields.io/badge/-Html5-E34F26.svg?logo=html5&style=plastic">
 <img src="https://img.shields.io/badge/-Css3-1572B6.svg?logo=css3&style=plastic">
+<img src="https://img.shields.io/badge/-Javascript-F7DF1E.svg?logo=javascript&style=plastic">
+<img src="https://img.shields.io/badge/npm-v10.8.2-CB3837.svg?logo=npm&style=plastic">
 
 ├── electron@33.0.1
 ├── express@4.21.1
 ├── ip@2.0.1
 ├── multer@1.4.5-lts.1
 └── sqlite3@5.1.7
-
-## コマンド
-**electronでデスクトップアプリ化する**
-```
-npx electron ./public
-```
-
-## vscodeの機能を用いる場合  
-### ブランチの作り方及びマージ  
-https://www.kagoya.jp/howto/rentalserver/webtrend/vscode/
 
 ## gitコマンドを用いる場合
 
@@ -107,4 +112,8 @@ git push origin update-README
 
 ### プルリクエストの作成
 githubへアクセスして, プルリクエストを作成する.
+
+## ヘルプ
+カスタムアイコン:https://t8csp.csb.app/  
+markdown記法:https://qiita.com/Qiita/items/c686397e4a0f4f11683d
 
