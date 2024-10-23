@@ -38,19 +38,31 @@ const upload = multer({ storage: storage, limits: { fileSize: 50 * 1024 * 1024 }
 
 // 画像保存用のPOSTエンドポイント
 app.post('/upload-image', upload.single('image'), (req, res) => {
-  console.log('Image saved to', req.file.path);
-  res.status(200).send('Image saved successfully');
+  console.log('画像を以下のディレクトリに保存しました', req.file.path);
+  res.status(200).send('正常に保存されました');
 });
 
 // SQLite3のデータベースファイルへのパスを設定
-const dbPath = path.join(userHomeDir, 'Desktop', 'data', 'database.sqlite');
+const dbDirectory = path.join(userHomeDir, 'Desktop', 'data');
+const dbPath = path.join(dbDirectory, 'database.sqlite3');
+
+// データベースディレクトリが存在しない場合は作成
+if (!fs.existsSync(dbDirectory)) {
+  fs.mkdirSync(dbDirectory, { recursive: true });
+  console.log(`ディレクトリを新規作成しました: ${dbDirectory}`);
+}
+
+// データベースファイルが存在しない場合は作成
+if (!fs.existsSync(dbPath)) {
+  console.log(`sqlite3ファイルが存在しません。以下のディレクトリに新規作成しました。: ${dbPath}`);
+}
 
 // データベースに接続
 let db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
-        console.error('Could not connect to database', err);
+        console.error('データベースに接続できませんでした', err);
     } else {
-        console.log('Connected to the SQLite3 database.');
+        console.log('sqlite3データベースに接続しました');
     }
 });
 
@@ -76,9 +88,9 @@ app.post('/submit-data', (req, res) => {
     const sql = 'INSERT INTO users (name, familyname) VALUES (?, ?)';
     db.run(sql, [name, familyname], function(err) {
         if (err) {
-            return res.status(500).json({ message: 'Failed to save data' });
+            return res.status(500).json({ message: 'データの保存に失敗しました' });
         }
-        res.json({ message: 'Data saved successfully' });
+        res.json({ message: '正常に保存されました' });
     });
 });
 

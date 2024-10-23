@@ -29,3 +29,8 @@ footer
     width: 100%;
     background-color: khaki;
 }
+.left-bottom-button {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+}
