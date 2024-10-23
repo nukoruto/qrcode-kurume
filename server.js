@@ -1,4 +1,3 @@
-// 必要なモジュールの読み込み
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -10,41 +9,17 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = 3002;
 
-// publicディレクトリを静的ファイルのルートディレクトリとして指定
 app.use(express.static('public'));
+app.use(bodyParser.json());
 
 // 実行中のユーザーのホームディレクトリを取得
 const userHomeDir = os.homedir();
 
-// 画像保存ディレクトリを指定（ユーザーのPicturesフォルダ内）
-const saveDirectory = path.join(userHomeDir, 'Pictures', 'demo');
-
-// ディレクトリが存在しない場合は作成
-if (!fs.existsSync(saveDirectory)) {
-    fs.mkdirSync(saveDirectory, { recursive: true });
-}
-
-// multerの設定
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, saveDirectory);  // 保存先ディレクトリ
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `image_${uniqueSuffix}.png`);  // ファイル名を設定
-  }
-});
-const upload = multer({ storage: storage, limits: { fileSize: 50 * 1024 * 1024 } });  // ファイルサイズ制限を50MBに設定
-
-// 画像保存用のPOSTエンドポイント
-app.post('/upload-image', upload.single('image'), (req, res) => {
-  console.log('画像を以下のディレクトリに保存しました', req.file.path);
-  res.status(200).send('正常に保存されました');
-});
+// ---- 元の処理: users.sqlite3を使ったデータベースの処理 ----
 
 // SQLite3のデータベースファイルへのパスを設定
 const dbDirectory = path.join(userHomeDir, 'Desktop', 'data');
-const dbPath = path.join(dbDirectory, 'database.sqlite3');
+const dbPath = path.join(dbDirectory, 'users.sqlite3');
 
 // データベースディレクトリが存在しない場合は作成
 if (!fs.existsSync(dbDirectory)) {
@@ -62,7 +37,7 @@ let db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('データベースに接続できませんでした', err);
     } else {
-        console.log('sqlite3データベースに接続しました');
+        console.log('users.sqlite3データベースに接続しました');
     }
 });
 
@@ -72,9 +47,6 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
     name TEXT,
     familyname TEXT
 )`);
-
-// body-parserを設定してPOSTデータを処理
-app.use(bodyParser.json());
 
 // POSTリクエストを処理してデータベースに保存
 app.post('/submit-data', (req, res) => {
@@ -91,6 +63,67 @@ app.post('/submit-data', (req, res) => {
             return res.status(500).json({ message: 'データの保存に失敗しました' });
         }
         res.json({ message: '正常に保存されました' });
+    });
+});
+
+// ---- 新しい処理: tenkenデータベースに保存 ----
+
+// POSTリクエストを処理してtenken用データベースに保存
+app.post('/submit-inspection', (req, res) => {
+    const { item, result, filename } = req.body;
+
+    if (!item || !result || !filename) {
+        return res.status(400).json({ message: 'Item, result, and filename are required' });
+    }
+
+    // ディレクトリのパスを定義（デスクトップに保存）
+    const tenkenDbDirectory = path.join(userHomeDir, 'Desktop', 'data', 'tenken');
+
+    // ディレクトリが存在しない場合は再帰的に作成
+    if (!fs.existsSync(tenkenDbDirectory)) {
+        fs.mkdirSync(tenkenDbDirectory, { recursive: true });
+        console.log(`tenkenディレクトリを作成しました: ${tenkenDbDirectory}`);
+    }
+
+    // ファイル名として静的テキストボックスに入力された値を使用
+    const tenkenDbPath = path.join(tenkenDbDirectory, `${filename}.sqlite3`);
+
+    // データベースに接続
+    let tenkenDb = new sqlite3.Database(tenkenDbPath, (err) => {
+        if (err) {
+            console.error('tenkenデータベースに接続できませんでした', err);
+            return res.status(500).json({ message: 'データベースに接続できませんでした' });
+        }
+        console.log(`${filename}.sqlite3データベースに接続しました`);
+
+        // テーブル作成処理
+        tenkenDb.run(`CREATE TABLE IF NOT EXISTS inspections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item TEXT,
+            result TEXT
+        )`, function(err) {
+            if (err) {
+                return res.status(500).json({ message: 'テーブルの作成に失敗しました' });
+            }
+
+            // データベースに挿入
+            const sql = 'INSERT INTO inspections (item, result) VALUES (?, ?)';
+            tenkenDb.run(sql, [item, result], function(err) {
+                if (err) {
+                    return res.status(500).json({ message: 'データの保存に失敗しました' });
+                }
+                res.json({ message: `${filename}.sqlite3にデータが正常に保存されました` });
+            });
+
+            // データベース接続をクローズ
+            tenkenDb.close((err) => {
+                if (err) {
+                    console.error('データベースのクローズ中にエラーが発生しました:', err);
+                } else {
+                    console.log('データベース接続をクローズしました');
+                }
+            });
+        });
     });
 });
 

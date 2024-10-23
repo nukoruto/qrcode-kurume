@@ -4,6 +4,21 @@
         <meta charset="UTF-8">
         <link href="css/reset.css" rel="stylesheet">
         <link href="css/index.css" rel="stylesheet">
+        <style>
+            /* ユーザー追加ボタンのスタイル */
+            .left-bottom-button {
+                position: fixed;
+                left: 20px;
+                bottom: 20px; /* ページの左下に配置 */
+            }
+
+            /* 点検簿追加ボタンのスタイル（ユーザー追加ボタンの上に動的に配置） */
+            .left-bottom-button-inspection {
+                position: fixed;
+                left: 20px;
+                bottom: calc(20px + 50px); /* 20pxのスペース + ユーザー追加ボタンの高さ分 */
+            }
+        </style>
     </head>
     <body>
         <div class="main_button">
@@ -20,8 +35,7 @@
             </div>
 
             <script>
-                function Time()
-                {
+                function Time() {
                     var realTime = new Date();
                     var hour = realTime.getHours();
                     var minutes = realTime.getMinutes();
@@ -33,9 +47,14 @@
             </script>
         </footer>
 
-        <!-- 左下に追加されたボタン -->
+        <!-- ユーザー追加ボタン（下に配置） -->
         <div class="left-bottom-button">
             <a class="buttons" href="useradd.html">ユーザー追加</a>
+        </div>
+
+        <!-- 点検簿追加ボタン（上に配置、calcで動的スペースを確保） -->
+        <div class="left-bottom-button-inspection">
+            <a class="buttons" href="exceladd.html">点検簿追加</a>
         </div>
     </body>
 </html>
