@@ -3,6 +3,11 @@
 https://www.kagoya.jp/howto/rentalserver/webtrend/vscode/
 周りの変更を確認したいとき  
 https://envader.plus/article/368
+**リポジトリをクローンしたらやる必要があること**
+https://git-lfs.com/ でダウンロード
+```
+git lfs install
+```
 **electronでデスクトップアプリ化する**
 ```
 npm start
