@@ -8,11 +8,6 @@
         .textbox-container {
             margin-bottom: 10px;
         }
-        .back-button-container {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-        }
     </style>
 </head>
 <body>
@@ -32,10 +27,8 @@
     <!-- データを送信するボタン -->
     <button onclick="saveInspectionData()">指定されたファイルにデータを保存</button>
 
-    <!-- 戻るボタンをページ最下部に配置 -->
-    <div class="back-button-container">
-        <button onclick="window.location.href = 'index.html';">戻る</button>
-    </div>
+    <!-- 戻るボタン -->
+    <button onclick="window.location.href = 'index.html';">戻る</button>
 
     <script>
         // テキストボックスを動的に作成する関数
@@ -65,38 +58,33 @@
             }
         }
 
-        // データをサーバーに送信する関数 (tenkenデータベースに保存)
+        // データをサーバーに送信する関数
         function saveInspectionData() {
             const textboxes = document.querySelectorAll('.textbox');
-            const values = [];
             const filename = document.getElementById('filename-input').value;
 
-            // ファイル名が入力されていない場合はエラーを表示
             if (!filename) {
                 alert('ファイル名を入力してください');
                 return;
             }
 
-            // 全ての動的に作成されたテキストボックスの値を取得
-            textboxes.forEach(textbox => {
-                if (textbox.value !== '') {
-                    values.push(textbox.value);
-                }
-            });
+            const matters = Array.from(textboxes).map((textbox, index) => ({
+                id: index + 1,
+                matter: textbox.value
+            }));
 
-            // サーバーにPOSTリクエストを送信
-            fetch('/submit-inspection', {
+            // 全てのテキストボックスの値を一括送信
+            fetch('/submit-inspections', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ item: values[0], result: values[1], filename: filename }),  // 最初の2つのテキストボックスを使用
+                body: JSON.stringify({ filename, matters }),
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);  // サーバーからのレスポンスをアラートで表示
-                // 成功時にexcelladdcomplete.htmlに遷移
-                window.location.href = 'excelladdcomplete.html';
+                alert('すべてのデータが送信されました');
+                window.location.href = `excelladdcomplete.html?filename=${encodeURIComponent(filename)}`;
             })
             .catch(error => console.error('Error:', error));
         }

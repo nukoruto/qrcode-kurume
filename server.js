@@ -1,7 +1,6 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
 const os = require('os');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
@@ -12,7 +11,6 @@ const port = 3002;
 app.use(express.static('public'));
 app.use(bodyParser.json());
 
-// 実行中のユーザーのホームディレクトリを取得
 const userHomeDir = os.homedir();
 
 // ---- 元の処理: users.sqlite3を使ったデータベースの処理 ----
@@ -67,67 +65,69 @@ app.post('/submit-data', (req, res) => {
 });
 
 // ---- 新しい処理: tenkenデータベースに保存 ----
+// POSTリクエストを処理して、複数のテキストボックスデータを一括保存する
+app.post('/submit-inspections', (req, res) => {
+    const { filename, matters } = req.body;
 
-// POSTリクエストを処理してtenken用データベースに保存
-app.post('/submit-inspection', (req, res) => {
-    const { item, result, filename } = req.body;
-
-    if (!item || !result || !filename) {
-        return res.status(400).json({ message: 'Item, result, and filename are required' });
+    // 必要なデータが送信されているか確認
+    if (!matters || !filename) {
+        return res.status(400).json({ message: 'matters and filename are required' });
     }
 
-    // ディレクトリのパスを定義（デスクトップに保存）
+    // データベースの保存先ディレクトリを指定
     const tenkenDbDirectory = path.join(userHomeDir, 'Desktop', 'data', 'tenken');
+    const tenkenDbPath = path.join(tenkenDbDirectory, `${filename}.sqlite3`);
 
-    // ディレクトリが存在しない場合は再帰的に作成
+    // ディレクトリが存在しない場合は作成
     if (!fs.existsSync(tenkenDbDirectory)) {
         fs.mkdirSync(tenkenDbDirectory, { recursive: true });
         console.log(`tenkenディレクトリを作成しました: ${tenkenDbDirectory}`);
     }
 
-    // ファイル名として静的テキストボックスに入力された値を使用
-    const tenkenDbPath = path.join(tenkenDbDirectory, `${filename}.sqlite3`);
-
     // データベースに接続
     let tenkenDb = new sqlite3.Database(tenkenDbPath, (err) => {
         if (err) {
-            console.error('tenkenデータベースに接続できませんでした', err);
-            return res.status(500).json({ message: 'データベースに接続できませんでした' });
+            console.error('データベース接続に失敗しました:', err);
+            return res.status(500).json({ message: 'データベース接続に失敗しました' });
         }
-        console.log(`${filename}.sqlite3データベースに接続しました`);
+    });
 
-        // テーブル作成処理
-        tenkenDb.run(`CREATE TABLE IF NOT EXISTS inspections (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            item TEXT,
-            result TEXT
-        )`, function(err) {
+    // データベースにテーブルが存在しない場合は作成
+    tenkenDb.run(`CREATE TABLE IF NOT EXISTS inspections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        matter TEXT
+    )`, function(err) {
+        if (err) {
+            console.error('テーブル作成に失敗しました:', err);
+            return res.status(500).json({ message: 'テーブル作成に失敗しました' });
+        }
+
+        // テキストボックスのデータを順番に挿入
+        const insertStmt = tenkenDb.prepare('INSERT INTO inspections (matter) VALUES (?)');
+        matters.forEach(({ matter }) => {
+            insertStmt.run(matter, function(err) {
+                if (err) {
+                    console.error('データ挿入に失敗しました:', err);
+                }
+            });
+        });
+
+        // 挿入が完了したらステートメントを閉じる
+        insertStmt.finalize();
+        res.json({ message: 'データが正常に保存されました' });
+
+        // データベース接続を閉じる
+        tenkenDb.close((err) => {
             if (err) {
-                return res.status(500).json({ message: 'テーブルの作成に失敗しました' });
+                console.error('データベースのクローズに失敗しました:', err);
+            } else {
+                console.log('データベース接続をクローズしました');
             }
-
-            // データベースに挿入
-            const sql = 'INSERT INTO inspections (item, result) VALUES (?, ?)';
-            tenkenDb.run(sql, [item, result], function(err) {
-                if (err) {
-                    return res.status(500).json({ message: 'データの保存に失敗しました' });
-                }
-                res.json({ message: `${filename}.sqlite3にデータが正常に保存されました` });
-            });
-
-            // データベース接続をクローズ
-            tenkenDb.close((err) => {
-                if (err) {
-                    console.error('データベースのクローズ中にエラーが発生しました:', err);
-                } else {
-                    console.log('データベース接続をクローズしました');
-                }
-            });
         });
     });
 });
 
 // サーバー起動
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running at http://localhost:${port}/`);
+    console.log(`Server running at http://localhost:${port}/`);
 });

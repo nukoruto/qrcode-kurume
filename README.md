@@ -3,10 +3,15 @@
 https://www.kagoya.jp/howto/rentalserver/webtrend/vscode/
 周りの変更を確認したいとき  
 https://envader.plus/article/368
+
 **リポジトリをクローンしたらやる必要があること**
 https://git-lfs.com/ でダウンロード
 ```
 git lfs install
+```
+**ログの日本語化**
+```
+chcp 65001
 ```
 **electronでデスクトップアプリ化する**
 ```
