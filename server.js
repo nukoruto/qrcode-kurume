@@ -93,7 +93,7 @@ app.post('/submit-inspections', (req, res) => {
     });
 
     // データベースにテーブルが存在しない場合は作成
-    tenkenDb.run(`CREATE TABLE IF NOT EXISTS inspections (
+    tenkenDb.run(`CREATE TABLE IF NOT EXISTS koumoku (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         matter TEXT
     )`, function(err) {
@@ -103,7 +103,7 @@ app.post('/submit-inspections', (req, res) => {
         }
 
         // テキストボックスのデータを順番に挿入
-        const insertStmt = tenkenDb.prepare('INSERT INTO inspections (matter) VALUES (?)');
+        const insertStmt = tenkenDb.prepare('INSERT INTO koumoku (matter) VALUES (?)');
         matters.forEach(({ matter }) => {
             insertStmt.run(matter, function(err) {
                 if (err) {
