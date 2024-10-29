@@ -1,0 +1,22 @@
+.backbtn {
+    display: block;
+    background: #2a6aff;
+    width: 20rem;
+    padding: 1rem;
+    border-radius: .6rem;
+    color: #000000;
+    text-align: center;
+    text-decoration: none;
+    letter-spacing: .1rem;
+    transition: .5s;
+    
+    position: fixed; /* 固定位置にする */
+    left: 50%; /* 左から50%の位置 */
+    bottom: 40px; /* 下から40pxの位置 */
+    transform: translateX(-50%); /* 中央に寄せるための補正 */
+}
+
+.button:hover {
+    background: #5da3ff;
+    color: #000000;
+  }
