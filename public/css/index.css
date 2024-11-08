@@ -34,3 +34,8 @@ footer
     bottom: 10px;
     left: 10px;
 }
+.left-bottom-button-inspection {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+}
