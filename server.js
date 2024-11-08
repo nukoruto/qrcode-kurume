@@ -5,6 +5,8 @@ const os = require('os');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const multer = require('multer');
+const { format } = require('date-fns');
+const QRCode = require('qrcode');
 
 const app = express();
 const port = 3002;
@@ -29,7 +31,37 @@ function getWifiIPAddress() {
 app.use(express.static('public'));
 app.use(bodyParser.json());
 
+const hostname = os.hostname();
+const username = os.userInfo().username;
+const baseDirectory = `\\\\${hostname}\\Users\\${username}\\Desktop\\data\\tenken`;
+
 const userHomeDir = os.homedir();
+
+// ファイルのコピーとネットワークパスを返すエンドポイント
+app.get('/copy-and-share', (req, res) => {
+    const originalFileName = req.query.fileName;
+    const originalFilePath = path.join(baseDirectory, originalFileName);
+
+    // コピー先のファイル名を生成
+    const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
+    const newFileName = `${path.basename(originalFileName, '.xlsx')}_${timestamp}.xlsx`;
+    const newFilePath = path.join(baseDirectory, newFileName);
+
+    // ファイルコピー
+    fs.copyFile(originalFilePath, newFilePath, (err) => {
+        if (err) {
+            console.error('ファイルコピーエラー:', err);
+            return res.json({ success: false, message: 'ファイルのコピーに失敗しました' });
+        }
+
+        // コピー先のネットワークパスを返す
+        const networkPath = `\\\\${hostname}\\Users\\${username}\\Desktop\\data\\tenken\\${newFileName}`;
+        res.json({
+            success: true,
+            networkPath: networkPath
+        });
+    });
+});
 
 // 画像保存ディレクトリを指定（ユーザーのPicturesフォルダ内）
 const saveDirectory = path.join(userHomeDir, 'Pictures', 'demo');

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <link href="css/reset.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点検帳票 QRコードスキャン</title>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <style>
+        #qr-reader {
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+        }
+        #result {
+            font-size: 1.2em;
+            color: green;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #file-link {
+            display: block;
+            margin-top: 10px;
+            color: blue;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">点検帳票 QRコードスキャン</h1>
+
+    <!-- QRコードスキャナーを表示するエリア -->
+    <div id="qr-reader"></div>
+    <p id="result">QRコードをスキャンしてください</p>
+
+    <script>
+        function onScanSuccess(decodedText) {
+            document.getElementById("result").innerText = `QRコード読み取り成功: ${decodedText}`;
+
+            // QRコードに含まれたファイル名をサーバーに送信してネットワークパスを取得
+            fetch(`/copy-and-share?fileName=${encodeURIComponent(decodedText)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const fileLink = document.createElement('a');
+                        fileLink.id = 'file-link';
+                        fileLink.href = `ms-excel:ofe|u|${data.networkPath}`;
+                        fileLink.innerText = "コピーされたファイルをExcelで開く";
+                        fileLink.target = "_blank";
+                        
+                        document.getElementById("result").innerHTML = "ファイルのコピーが完了しました。以下のリンクをタップして開いてください。";
+                        document.getElementById("result").appendChild(fileLink);
+                    } else {
+                        document.getElementById("result").innerText = "ファイルのコピーに失敗しました";
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    document.getElementById("result").innerText = "エラーが発生しました";
+                });
+        }
+
+        function onScanFailure(error) {
+            console.warn(`QRコード読み取りエラー: ${error}`);
+        }
+
+        let qrCodeScanner = new Html5Qrcode("qr-reader");
+        qrCodeScanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            onScanSuccess,
+            onScanFailure
+        ).catch(err => console.error("カメラ起動エラー:", err));
+    </script>
+</body>
+</html>
