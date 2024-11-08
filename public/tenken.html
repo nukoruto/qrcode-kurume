@@ -2,41 +2,41 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <link href="css/reset.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>点検帳票 QRコードスキャン</title>
+    <title>QRコード読み取り (画像アップロード)</title>
     <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
     <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        #camera-canvas {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            width: 100%;  
+            height: auto;
         }
-        #result {
+        #qr-msg {
             font-size: 1.2em;
             color: green;
-            text-align: center;
-            margin-top: 20px;
-        }
-        #note {
-            font-size: 0.9em;
-            color: red;
             text-align: center;
             margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>点検帳票 QRコードスキャン</h1>
+    <h1 style="text-align:center;">QRコード読み取り</h1>
 
-    <!-- QRコードの読み込み -->
-    <input type="file" accept="image/*" id="fileInput" onchange="handleImageUpload(event)" capture="environment">
-    <p id="result">カメラアプリで写真を撮影し、画像をアップロードしてください</p>
-    <p id="note">アップロードした画像からQRコードを読み取ります</p>
+    <!-- 画像アップロード -->
+    <input type="file" id="upload-image" accept="image/*">
+    <!-- QRコード検出領域を描画するキャンバス -->
+    <canvas id="camera-canvas"></canvas>
+    <p id="qr-msg">QRコードがここに表示されます</p>
 
     <script>
-        // 画像がアップロードされたときにQRコードを解析
-        function handleImageUpload(event) {
+        const uploadImage = document.getElementById('upload-image');
+        const canvas = document.getElementById('camera-canvas');
+        const ctx = canvas.getContext('2d');
+        const qrMsg = document.getElementById('qr-msg');
+
+        uploadImage.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -44,30 +44,39 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    // キャンバスに画像を描画して、ピクセルデータを取得
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, img.width, img.height);
-                    const imageData = ctx.getImageData(0, 0, img.width, img.height);
+                    // QRコード認識精度向上のため、画像をリサイズしてキャンバスに描画
+                    const maxDimension = 640;  // 解析に最適なサイズを指定
+                    let imgWidth = img.width;
+                    let imgHeight = img.height;
 
-                    // jsQRライブラリを使用してQRコードを解析
-                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    if (imgWidth > maxDimension || imgHeight > maxDimension) {
+                        const scale = maxDimension / Math.max(imgWidth, imgHeight);
+                        imgWidth *= scale;
+                        imgHeight *= scale;
+                    }
+
+                    canvas.width = imgWidth;
+                    canvas.height = imgHeight;
+                    ctx.drawImage(img, 0, 0, imgWidth, imgHeight);
+
+                    // QRコードの解析
+                    const imageData = ctx.getImageData(0, 0, imgWidth, imgHeight);
+                    const code = jsQR(imageData.data, imgWidth, imgHeight);
                     if (code) {
-                        document.getElementById("result").innerText = `QRコード読み取り成功: ${code.data}`;
-                        // QRコードの内容に基づいた処理を追加
-                        handleQrCodeData(code.data);
+                        console.log("QRコードが見つかりました:", code);
+                        qrMsg.textContent = `QRコード: ${code.data}`;
+                        handleQrCodeData(code.data); // QRコードの内容を処理
                     } else {
-                        document.getElementById("result").innerText = "QRコードが見つかりませんでした。";
+                        console.log("QRコードが見つかりません");
+                        qrMsg.textContent = "QRコード: 見つかりません";
                     }
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
-        }
+        });
 
-        // QRコードデータを処理
+        // QRコードのデータを処理する既存の関数
         function handleQrCodeData(data) {
             fetch(`/copy-and-share?fileName=${encodeURIComponent(data)}`)
                 .then(response => response.json())
@@ -78,16 +87,15 @@
                         fileLink.innerText = "コピーされたファイルをExcelで開く";
                         fileLink.target = "_blank";
 
-                        const resultDiv = document.getElementById("result");
-                        resultDiv.innerHTML = "ファイルのコピーが完了しました。以下のリンクをタップして開いてください。";
-                        resultDiv.appendChild(fileLink);
+                        qrMsg.innerHTML = "ファイルのコピーが完了しました。以下のリンクをタップして開いてください。";
+                        qrMsg.appendChild(fileLink);
                     } else {
-                        document.getElementById("result").innerText = "ファイルのコピーに失敗しました";
+                        qrMsg.innerText = "ファイルのコピーに失敗しました";
                     }
                 })
                 .catch(error => {
                     console.error("QRコードデータ処理エラー:", error);
-                    document.getElementById("result").innerText = "エラーが発生しました";
+                    qrMsg.innerText = "エラーが発生しました";
                 });
         }
     </script>

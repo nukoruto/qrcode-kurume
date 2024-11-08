@@ -40,7 +40,7 @@ const userHomeDir = os.homedir();
 // ファイルのコピーとネットワークパスを返すエンドポイント
 app.get('/copy-and-share', (req, res) => {
     const originalFileName = req.query.fileName;
-    const originalFilePath = path.join(baseDirectory, originalFileName);
+    const originalFilePath = path.join(originalFileName);
 
     // ファイルが存在するか確認
     if (!fs.existsSync(originalFilePath)) {
@@ -51,7 +51,7 @@ app.get('/copy-and-share', (req, res) => {
     // コピー先のファイル名を生成
     const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
     const newFileName = `${path.basename(originalFileName, '.xlsx')}_${timestamp}.xlsx`;
-    const newFilePath = path.join(baseDirectory, newFileName);
+    const newFilePath = path.join(newFileName);
 
     // ファイルコピー
     fs.copyFile(originalFilePath, newFilePath, (err) => {
@@ -73,7 +73,7 @@ app.get('/copy-and-share', (req, res) => {
 // ダウンロード用エンドポイントを追加
 app.get('/download/:fileName', (req, res) => {
     const fileName = req.params.fileName;
-    const filePath = path.join(baseDirectory, fileName);
+    const filePath = path.join(fileName);
 
     // ファイルが存在するか確認
     if (!fs.existsSync(filePath)) {
