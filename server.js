@@ -33,14 +33,14 @@ app.use(bodyParser.json());
 
 const hostname = os.hostname();
 const username = os.userInfo().username;
-const baseDirectory = `\\\\${hostname}\\Users\\${username}\\Desktop\\data\\tenken`;
+const baseDirectory_tenken = `\\\\${hostname}\\Users\\${username}\\Desktop\\data\\tenken`;
 
 const userHomeDir = os.homedir();
 
 // ファイルのコピーとネットワークパスを返すエンドポイント
 app.get('/copy-and-share', (req, res) => {
     const originalFileName = req.query.fileName;
-    const originalFilePath = path.join(originalFileName);
+    const originalFilePath = path.resolve(originalFileName);
 
     // ファイルが存在するか確認
     if (!fs.existsSync(originalFilePath)) {
@@ -48,10 +48,17 @@ app.get('/copy-and-share', (req, res) => {
         return res.json({ success: false, message: '指定されたファイルが見つかりません' });
     }
 
+    // 日付フォーマットでディレクトリを作成
+    const currentDate = format(new Date(), 'yyyyMMdd');
+    const targetDirectory = path.join(baseDirectory_tenken, 'daily', currentDate);
+    if (!fs.existsSync(targetDirectory)) {
+        fs.mkdirSync(targetDirectory, { recursive: true });
+    }
+
     // コピー先のファイル名を生成
     const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
     const newFileName = `${path.basename(originalFileName, '.xlsx')}_${timestamp}.xlsx`;
-    const newFilePath = path.join(newFileName);
+    const newFilePath = path.join(targetDirectory,newFileName);
 
     // ファイルコピー
     fs.copyFile(originalFilePath, newFilePath, (err) => {
@@ -61,7 +68,7 @@ app.get('/copy-and-share', (req, res) => {
         }
 
         // コピー先のネットワークパスを返す
-        const networkPath = `\\\\${hostname}\\Users\\${username}\\Desktop\\data\\tenken\\${newFileName}`;
+        const networkPath = `\\\\${hostname}\\Users\\${username}\\Desktop\\data\\tenken\\daily\\${currentDate}\\${newFileName}`;
         res.json({
             success: true,
             networkPath: networkPath,

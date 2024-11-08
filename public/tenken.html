@@ -25,8 +25,7 @@
     <h1 style="text-align:center;">QRコード読み取り</h1>
 
     <!-- 画像アップロード -->
-    <input type="file" id="upload-image" accept="image/*">
-    <!-- QRコード検出領域を描画するキャンバス -->
+    <input type="file" id="upload-image" capture="environment" accept="image/*">    <!-- QRコード検出領域を描画するキャンバス -->
     <canvas id="camera-canvas"></canvas>
     <p id="qr-msg">QRコードがここに表示されます</p>
 
