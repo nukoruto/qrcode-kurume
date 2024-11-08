@@ -2,6 +2,23 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const child_process = require('child_process');
+const os = require('os');
+
+function getWifiIPAddress() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+      if (name.includes('Wi-Fi') || name.includes('Wireless')) {
+          for (const iface of interfaces[name]) {
+              if (iface.family === 'IPv4' && !iface.internal) {
+                  return iface.address;
+              }
+          }
+      }
+  }
+  return '127.0.0.1';
+}
+
+const localIP = getWifiIPAddress();
 
 // サーバーをバックグラウンドで実行
 let serverProcess;
@@ -16,10 +33,10 @@ function createWindow() {
         nodeIntegration: true,  // RendererプロセスでNode.jsモジュールを使用
         contextIsolation: true,
     }
-  });
+    });
 
   // ローカルサーバー上のアプリケーションをロード
-  mainWindow.loadURL('http://localhost:3002');  // Electronがローカルサーバーを参照
+  mainWindow.loadURL(`http://${localIP}:3002`);  // 変数localIPをバッククォートで囲み、テンプレートリテラルで展開
   mainWindow.on('closed', () => {
     mainWindow = null;
   });

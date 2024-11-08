@@ -42,6 +42,12 @@ app.get('/copy-and-share', (req, res) => {
     const originalFileName = req.query.fileName;
     const originalFilePath = path.join(baseDirectory, originalFileName);
 
+    // ファイルが存在するか確認
+    if (!fs.existsSync(originalFilePath)) {
+        console.error('ファイルが見つかりません:', originalFilePath);
+        return res.json({ success: false, message: '指定されたファイルが見つかりません' });
+    }
+
     // コピー先のファイル名を生成
     const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
     const newFileName = `${path.basename(originalFileName, '.xlsx')}_${timestamp}.xlsx`;
@@ -58,10 +64,33 @@ app.get('/copy-and-share', (req, res) => {
         const networkPath = `\\\\${hostname}\\Users\\${username}\\Desktop\\data\\tenken\\${newFileName}`;
         res.json({
             success: true,
-            networkPath: networkPath
+            networkPath: networkPath,
+            downloadUrl: `/download/${encodeURIComponent(newFileName)}`  // ダウンロードリンクを追加
         });
     });
 });
+
+// ダウンロード用エンドポイントを追加
+app.get('/download/:fileName', (req, res) => {
+    const fileName = req.params.fileName;
+    const filePath = path.join(baseDirectory, fileName);
+
+    // ファイルが存在するか確認
+    if (!fs.existsSync(filePath)) {
+        console.error('ダウンロード対象のファイルが見つかりません:', filePath);
+        return res.status(404).send('ファイルが見つかりません');
+    }
+
+    // ファイルのダウンロード
+    res.download(filePath, fileName, (err) => {
+        if (err) {
+            console.error('ファイルダウンロードエラー:', err);
+        } else {
+            console.log(`ファイルがダウンロードされました: ${filePath}`);
+        }
+    });
+});
+
 
 // 画像保存ディレクトリを指定（ユーザーのPicturesフォルダ内）
 const saveDirectory = path.join(userHomeDir, 'Pictures', 'demo');
