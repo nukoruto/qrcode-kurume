@@ -9,6 +9,23 @@ const multer = require('multer');
 const app = express();
 const port = 3002;
 
+// Wi-FiアダプタのIPv4アドレスを取得する関数
+function getWifiIPAddress() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        if (name.includes('Wi-Fi') || name.includes('Wireless')) {
+            for (const iface of interfaces[name]) {
+                if (iface.family === 'IPv4' && !iface.internal) {
+                    return iface.address;
+                }
+            }
+        }
+    }
+    return '127.0.0.1';
+  }
+  
+  const localIP = getWifiIPAddress();
+
 app.use(express.static('public'));
 app.use(bodyParser.json());
 
@@ -156,5 +173,5 @@ app.post('/submit-inspections', (req, res) => {
 
 // サーバー起動
 app.listen(port, '0.0.0.0', () => {
-    console.log(`Server running at http://localhost:${port}/`);
-});
+    console.log(`Server running at http://${localIP}:${port}/`);
+  });
