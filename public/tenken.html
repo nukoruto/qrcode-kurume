@@ -19,21 +19,34 @@
             text-align: center;
             margin-top: 20px;
         }
+        #download-container, #upload-container {
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <h1 style="text-align:center;">QRコード読み取り</h1>
 
     <!-- 画像アップロード -->
-    <input type="file" id="upload-image" capture="environment" accept="image/*">    <!-- QRコード検出領域を描画するキャンバス -->
+    <input type="file" id="upload-image" capture="environment" accept="image/*">
     <canvas id="camera-canvas"></canvas>
     <p id="qr-msg">QRコードがここに表示されます</p>
+    <div id="download-container"></div> <!-- ダウンロードリンク表示用 -->
+    <div id="upload-container">
+        <input type="file" id="file-upload" accept=".xlsx">
+        <button id="upload-btn">ファイルをアップロード</button>
+    </div>
 
     <script>
         const uploadImage = document.getElementById('upload-image');
         const canvas = document.getElementById('camera-canvas');
         const ctx = canvas.getContext('2d');
         const qrMsg = document.getElementById('qr-msg');
+        const downloadContainer = document.getElementById('download-container');
+        const fileUpload = document.getElementById('file-upload');
+        const uploadBtn = document.getElementById('upload-btn');
+        let downloadUrl = '';
 
         uploadImage.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -43,8 +56,7 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    // QRコード認識精度向上のため、画像をリサイズしてキャンバスに描画
-                    const maxDimension = 640;  // 解析に最適なサイズを指定
+                    const maxDimension = 640;
                     let imgWidth = img.width;
                     let imgHeight = img.height;
 
@@ -58,15 +70,12 @@
                     canvas.height = imgHeight;
                     ctx.drawImage(img, 0, 0, imgWidth, imgHeight);
 
-                    // QRコードの解析
                     const imageData = ctx.getImageData(0, 0, imgWidth, imgHeight);
                     const code = jsQR(imageData.data, imgWidth, imgHeight);
                     if (code) {
-                        console.log("QRコードが見つかりました:", code);
                         qrMsg.textContent = `QRコード: ${code.data}`;
-                        handleQrCodeData(code.data); // QRコードの内容を処理
+                        handleQrCodeData(code.data);
                     } else {
-                        console.log("QRコードが見つかりません");
                         qrMsg.textContent = "QRコード: 見つかりません";
                     }
                 };
@@ -75,28 +84,46 @@
             reader.readAsDataURL(file);
         });
 
-        // QRコードのデータを処理する既存の関数
         function handleQrCodeData(data) {
-            fetch(`/copy-and-share?fileName=${encodeURIComponent(data)}`)
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        const fileLink = document.createElement('a');
-                        fileLink.href = `ms-excel:ofe|u|${result.networkPath}`;
-                        fileLink.innerText = "コピーされたファイルをExcelで開く";
-                        fileLink.target = "_blank";
-
-                        qrMsg.innerHTML = "ファイルのコピーが完了しました。以下のリンクをタップして開いてください。";
-                        qrMsg.appendChild(fileLink);
-                    } else {
-                        qrMsg.innerText = "ファイルのコピーに失敗しました";
-                    }
-                })
-                .catch(error => {
-                    console.error("QRコードデータ処理エラー:", error);
-                    qrMsg.innerText = "エラーが発生しました";
-                });
+            downloadUrl = `/download?filePath=${encodeURIComponent(data)}`;
+            qrMsg.innerText = "以下のボタンでファイルをダウンロードできます。";
+            const downloadButton = document.createElement('a');
+            downloadButton.href = downloadUrl;
+            downloadButton.download = "";
+            downloadButton.innerText = "ファイルをダウンロード";
+            downloadButton.style.display = "inline-block";
+            downloadButton.style.marginTop = "10px";
+            downloadButton.style.padding = "10px";
+            downloadButton.style.color = "white";
+            downloadButton.style.backgroundColor = "#4CAF50";
+            downloadButton.style.textDecoration = "none";
+            downloadButton.style.borderRadius = "5px";
+            downloadContainer.innerHTML = '';
+            downloadContainer.appendChild(downloadButton);
         }
+
+        uploadBtn.addEventListener('click', () => {
+            const file = fileUpload.files[0];
+            if (!file) {
+                alert("アップロードするファイルを選択してください。");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                alert(result);
+            })
+            .catch(error => {
+                console.error("アップロードエラー:", error);
+            });
+        });
     </script>
 </body>
 </html>

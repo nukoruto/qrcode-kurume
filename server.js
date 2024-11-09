@@ -31,56 +31,32 @@ function getWifiIPAddress() {
 app.use(express.static('public'));
 app.use(bodyParser.json());
 
+// multerの設定（アップロード先ディレクトリを指定）
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const currentDate = format(new Date(), 'yyyyMMdd');
+      const targetDirectory_tenken = path.join(baseDirectory_tenken, 'daily', currentDate);
+  
+      // ディレクトリが存在しない場合、再帰的に作成
+      if (!fs.existsSync(targetDirectory_tenken)) {
+          fs.mkdirSync(targetDirectory_tenken, { recursive: true });
+      }
+      cb(null, targetDirectory_tenken);
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname);  // ファイル名は変更せずそのまま保存
+    }
+  });
+
 const hostname = os.hostname();
 const username = os.userInfo().username;
 const baseDirectory_tenken = `\\\\${hostname}\\Users\\${username}\\Desktop\\data\\tenken`;
 
 const userHomeDir = os.homedir();
 
-// ファイルのコピーとネットワークパスを返すエンドポイント
-app.get('/copy-and-share', (req, res) => {
-    const originalFileName = req.query.fileName;
-    const originalFilePath = path.resolve(originalFileName);
-
-    // ファイルが存在するか確認
-    if (!fs.existsSync(originalFilePath)) {
-        console.error('ファイルが見つかりません:', originalFilePath);
-        return res.json({ success: false, message: '指定されたファイルが見つかりません' });
-    }
-
-    // 日付フォーマットでディレクトリを作成
-    const currentDate = format(new Date(), 'yyyyMMdd');
-    const targetDirectory = path.join(baseDirectory_tenken, 'daily', currentDate);
-    if (!fs.existsSync(targetDirectory)) {
-        fs.mkdirSync(targetDirectory, { recursive: true });
-    }
-
-    // コピー先のファイル名を生成
-    const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
-    const newFileName = `${path.basename(originalFileName, '.xlsx')}_${timestamp}.xlsx`;
-    const newFilePath = path.join(targetDirectory,newFileName);
-
-    // ファイルコピー
-    fs.copyFile(originalFilePath, newFilePath, (err) => {
-        if (err) {
-            console.error('ファイルコピーエラー:', err);
-            return res.json({ success: false, message: 'ファイルのコピーに失敗しました' });
-        }
-
-        // コピー先のネットワークパスを返す
-        const networkPath = `\\\\${hostname}\\Users\\${username}\\Desktop\\data\\tenken\\daily\\${currentDate}\\${newFileName}`;
-        res.json({
-            success: true,
-            networkPath: networkPath,
-            downloadUrl: `/download/${encodeURIComponent(newFileName)}`  // ダウンロードリンクを追加
-        });
-    });
-});
-
 // ダウンロード用エンドポイントを追加
-app.get('/download/:fileName', (req, res) => {
-    const fileName = req.params.fileName;
-    const filePath = path.join(fileName);
+app.get('/download', (req, res) => {
+    const filePath = req.query.filePath;
 
     // ファイルが存在するか確認
     if (!fs.existsSync(filePath)) {
@@ -89,13 +65,20 @@ app.get('/download/:fileName', (req, res) => {
     }
 
     // ファイルのダウンロード
-    res.download(filePath, fileName, (err) => {
+    res.download(filePath, path.basename(filePath), (err) => {
         if (err) {
             console.error('ファイルダウンロードエラー:', err);
         } else {
             console.log(`ファイルがダウンロードされました: ${filePath}`);
         }
     });
+});
+
+const upload = multer({ storage: storage, limits: { fileSize: 50 * 1024 * 1024 } });  // ファイルサイズ制限を50MBに設定
+
+// アップロード用エンドポイントを追加
+app.post('/upload', upload.single('file'), (req, res) => {
+    res.send('ファイルのアップロードが完了しました');
 });
 
 
@@ -107,17 +90,6 @@ if (!fs.existsSync(saveDirectory)) {
     fs.mkdirSync(saveDirectory, { recursive: true });
 }
 
-// multerの設定
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, saveDirectory);  // 保存先ディレクトリ
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `image_${uniqueSuffix}.png`);  // ファイル名を設定
-  }
-});
-const upload = multer({ storage: storage, limits: { fileSize: 50 * 1024 * 1024 } });  // ファイルサイズ制限を50MBに設定
 
 // 画像保存用のPOSTエンドポイント
 app.post('/upload-image', upload.single('image'), (req, res) => {
