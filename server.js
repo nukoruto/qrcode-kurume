@@ -4,11 +4,15 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+const port = 3002;
 const app = express();
 const upload = multer({ dest: 'uploads/' });
-
-const baseDir = path.join(__dirname, 'data', 'daily');
-
+const hostname = os.hostname();
+const username = os.userInfo().username;
+const baseDir = path.join(`\\\\${hostname}\\Users\\${username}\\Desktop\\data`, 'daily');
+if (!fs.existsSync(baseDir)) {
+  fs.mkdirSync(baseDir, { recursive: true });
+}
 // Wireless LAN adapter Wi-FiのIPアドレス取得関数
 function getWirelessLANIPAddress() {
   const networkInterfaces = os.networkInterfaces();
@@ -33,15 +37,26 @@ if (!serverIP) {
   process.exit(1);
 }
 
+// ルートエンドポイントを定義
+app.get('/', (req, res) => {
+  res.send('<h1>Welcome to the File Server</h1><p>Use the application to interact with this server.</p>');
+});
+
 app.get('/files', (req, res) => {
-  const dir = req.query.dir;
-  const filePath = path.join(baseDir, dir);
-  if (fs.existsSync(filePath)) {
-    const files = fs.readdirSync(filePath);
-    res.json(files);
-  } else {
-    res.status(404).send('Directory not found');
+  let dir = req.query.dir || ""; // クエリパラメータを取得
+  //dir = dir.replace(/\\\\/g, "\\");
+  if (!dir) {
+    return res.status(400).send('Directory parameter is missing');
   }
+
+  const directoryPath = dir;
+
+  if (!fs.existsSync(directoryPath)) {
+    return res.status(404).send('Directory not found');
+  }
+
+  const files = fs.readdirSync(directoryPath);
+  res.json(files);
 });
 
 app.post('/upload', upload.single('file'), (req, res) => {
@@ -56,5 +71,5 @@ app.post('/upload', upload.single('file'), (req, res) => {
 });
 
 app.listen(3002, serverIP, () => {
-  console.log(`Server is running on http://${serverIP}:3002`);
+  console.log(`Server is running on http://${serverIP}:${port}`);
 });
