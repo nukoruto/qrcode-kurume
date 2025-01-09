@@ -7,12 +7,13 @@ const os = require('os');
 const port = 3002;
 const app = express();
 const upload = multer({ dest: 'uploads/' });
-const hostname = os.hostname();
 const username = os.userInfo().username;
-const baseDir = path.join(`\\\\${hostname}\\Users\\${username}\\Desktop\\data`, 'daily');
+const baseDir = path.join(`C:\\Users\\${username}\\Desktop\\data\\data`); // 新しいベースディレクトリ
+
 if (!fs.existsSync(baseDir)) {
   fs.mkdirSync(baseDir, { recursive: true });
 }
+
 // Wireless LAN adapter Wi-FiのIPアドレス取得関数
 function getWirelessLANIPAddress() {
   const networkInterfaces = os.networkInterfaces();
@@ -43,13 +44,13 @@ app.get('/', (req, res) => {
 });
 
 app.get('/files', (req, res) => {
-  let dir = req.query.dir || ""; // クエリパラメータを取得
-  //dir = dir.replace(/\\\\/g, "\\");
+  let dir = req.query.dir; // クエリパラメータを取得
   if (!dir) {
     return res.status(400).send('Directory parameter is missing');
   }
 
-  const directoryPath = dir;
+  // `dir`の先頭スラッシュを削除し、`baseDir`に接続
+  const directoryPath = path.join(baseDir, dir.replace(/^\//, '').replace(/\//g, path.sep));
 
   if (!fs.existsSync(directoryPath)) {
     return res.status(404).send('Directory not found');
@@ -61,7 +62,7 @@ app.get('/files', (req, res) => {
 
 app.post('/upload', upload.single('file'), (req, res) => {
   const today = new Date().toISOString().split('T')[0];
-  const uploadDir = path.join(baseDir, today);
+  const uploadDir = path.join(baseDir, 'daily', today);
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
@@ -70,6 +71,6 @@ app.post('/upload', upload.single('file'), (req, res) => {
   res.send('File uploaded');
 });
 
-app.listen(3002, serverIP, () => {
+app.listen(port, serverIP, () => {
   console.log(`Server is running on http://${serverIP}:${port}`);
 });
