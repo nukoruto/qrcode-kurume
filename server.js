@@ -44,30 +44,41 @@ app.get('/', (req, res) => {
 });
 
 app.get('/files', (req, res) => {
-  let dir = req.query.dir; // クエリパラメータを取得
+  const dir = req.query.dir; // クエリパラメータでディレクトリ名を取得
   if (!dir) {
     return res.status(400).send('Directory parameter is missing');
   }
 
   // `dir`の先頭スラッシュを削除し、`baseDir`に接続
   const directoryPath = path.join(baseDir, dir.replace(/^\//, '').replace(/\//g, path.sep));
-
   if (!fs.existsSync(directoryPath)) {
     return res.status(404).send('Directory not found');
   }
 
-  const files = fs.readdirSync(directoryPath);
+  const files = fs.readdirSync(directoryPath).filter(file => file.endsWith('.xlsx'));
+  if (files.length === 0) {
+    return res.status(404).send('No .xlsx files found in the specified directory.');
+  }
+
   res.json(files);
 });
 
+// ファイルアップロード
 app.post('/upload', upload.single('file'), (req, res) => {
-  const today = new Date().toISOString().split('T')[0];
-  const uploadDir = path.join(baseDir, 'daily', today);
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式の日付
+  const folderName = req.query.folderName; // クエリパラメータでフォルダ名を取得
+  if (!folderName) {
+    return res.status(400).send('Folder name is missing');
+  }
+
+  const uploadDir = path.join(baseDir, folderName, 'daily', today);
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
+
   const destPath = path.join(uploadDir, req.file.originalname);
   fs.renameSync(req.file.path, destPath);
+
   res.send('File uploaded');
 });
 
