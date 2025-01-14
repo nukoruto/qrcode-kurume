@@ -43,6 +43,31 @@ app.get('/', (req, res) => {
   res.send('<h1>Welcome to the File Server</h1><p>Use the application to interact with this server.</p>');
 });
 
+// ファイルを直接取得するエンドポイント
+app.get('/file', (req, res) => {
+  const filePath = req.query.filePath; // クエリパラメータでファイルパスを取得
+
+  if (!filePath) {
+    return res.status(400).send('File path parameter is missing');
+  }
+
+  // `filePath` の先頭スラッシュを削除し、`baseDir`に接続
+  const fullPath = path.join(baseDir, filePath.replace(/^\//, '').replace(/\//g, path.sep));
+
+  if (!fs.existsSync(fullPath)) {
+    return res.status(404).send('File not found');
+  }
+
+  // ファイルを送信
+  res.download(fullPath, (err) => {
+    if (err) {
+      console.error('File download error:', err);
+      res.status(500).send('Error occurred while downloading the file');
+    }
+  });
+});
+
+//ファイル一覧を参照するエンドポイント
 app.get('/files', (req, res) => {
   const dir = req.query.dir; // クエリパラメータでディレクトリ名を取得
   if (!dir) {
