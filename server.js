@@ -52,7 +52,7 @@ app.get('/file', (req, res) => {
   }
 
   // `filePath` の先頭スラッシュを削除し、`baseDir`に接続
-  const fullPath = path.join(baseDir, filePath.replace(/^\//, '').replace(/\//g, path.sep));
+  const fullPath = path.join(baseDir, filePath);
 
   if (!fs.existsSync(fullPath)) {
     return res.status(404).send('File not found');
@@ -69,24 +69,39 @@ app.get('/file', (req, res) => {
 
 //ファイル一覧を参照するエンドポイント
 app.get('/files', (req, res) => {
-  const dir = req.query.dir; // クエリパラメータでディレクトリ名を取得
+  const dir = req.query.dir; // クエリパラメータでディレクトリパスを取得
+
   if (!dir) {
     return res.status(400).send('Directory parameter is missing');
   }
 
-  // `dir`の先頭スラッシュを削除し、`baseDir`に接続
+  // ベースディレクトリを接続し、ディレクトリパスを構築
   const directoryPath = path.join(baseDir, dir.replace(/^\//, '').replace(/\//g, path.sep));
+  
+  // ディレクトリが存在しない場合のエラーハンドリング
   if (!fs.existsSync(directoryPath)) {
     return res.status(404).send('Directory not found');
   }
 
-  const files = fs.readdirSync(directoryPath).filter(file => file.endsWith('.xlsx'));
-  if (files.length === 0) {
-    return res.status(404).send('No .xlsx files found in the specified directory.');
-  }
+  try {
+    // ディレクトリ内のすべてのファイルを取得し、拡張子をフィルタリング
+    const files = fs.readdirSync(directoryPath).filter(file => {
+      const ext = path.extname(file).toLowerCase();
+      return ext === '.xlsx' || ext === '.pdf';
+    });
 
-  res.json(files);
+    if (files.length === 0) {
+      return res.status(404).send('No .xlsx or .pdf files found in the specified directory.');
+    }
+
+    // ファイルリストをJSONとして返す
+    res.json(files);
+  } catch (error) {
+    console.error('Error reading directory:', error);
+    res.status(500).send('Error reading directory.');
+  }
 });
+
 
 // ファイルアップロード
 app.post('/upload', upload.single('file'), (req, res) => {
