@@ -105,22 +105,33 @@ app.get('/files', (req, res) => {
 
 // ファイルアップロード
 app.post('/upload', upload.single('file'), (req, res) => {
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式の日付
-  const folderName = req.query.folderName; // クエリパラメータでフォルダ名を取得
-  if (!folderName) {
-    return res.status(400).send('Folder name is missing');
+  try {
+      // 日付を取得してフォルダ名を生成
+      const today = new Date();
+      const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, '');
+
+      // 保存先ディレクトリ: baseDirの親フォルダの中にdailyフォルダを作成
+      const dailyDir = path.join(path.dirname(baseDir), 'daily', yyyyMMdd);
+
+      // 必要ならフォルダを再帰的に作成
+      if (!fs.existsSync(dailyDir)) {
+          fs.mkdirSync(dailyDir, { recursive: true });
+      }
+
+      // アップロードされたファイルの保存先パス
+      const destPath = path.join(dailyDir, req.file.originalname);
+
+      // ファイルを指定した場所に移動
+      fs.renameSync(req.file.path, destPath);
+
+      console.log(`File uploaded to: ${destPath}`);
+      res.status(200).send('File uploaded successfully');
+  } catch (err) {
+      console.error('Error during file upload:', err);
+      res.status(500).send('File upload failed');
   }
-
-  const uploadDir = path.join(baseDir, folderName, 'daily', today);
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  const destPath = path.join(uploadDir, req.file.originalname);
-  fs.renameSync(req.file.path, destPath);
-
-  res.send('File uploaded');
 });
+
 
 app.listen(port, serverIP, () => {
   console.log(`Server is running on http://${serverIP}:${port}`);
