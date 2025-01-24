@@ -9,6 +9,7 @@ const app = express();
 const upload = multer({ dest: 'uploads/' });
 const username = os.userInfo().username;
 const baseDir = path.join(`C:\\Users\\${username}\\Desktop\\data\\data`); // 新しいベースディレクトリ
+const pictureDir = path.join(path.dirname(baseDir), 'picture');
 
 if (!fs.existsSync(baseDir)) {
   fs.mkdirSync(baseDir, { recursive: true });
@@ -130,6 +131,33 @@ app.post('/upload', upload.single('file'), (req, res) => {
       console.error('Error during file upload:', err);
       res.status(500).send('File upload failed');
   }
+});
+
+// 画像を受け取るエンドポイント
+app.post('/upload-image', upload.single('file'), (req, res) => {
+  const today = new Date();
+  const yyyyMMdd = `${today.getFullYear()}${(today.getMonth() + 1)
+    .toString()
+    .padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+  
+  const saveDir = path.join(pictureDir, yyyyMMdd);
+
+  // ディレクトリが存在しない場合は作成
+  if (!fs.existsSync(saveDir)) {
+    fs.mkdirSync(saveDir, { recursive: true });
+  }
+
+  const targetPath = path.join(saveDir, req.file.originalname);
+
+  // ファイルを移動
+  fs.rename(req.file.path, targetPath, (err) => {
+    if (err) {
+      console.error('画像の保存中にエラーが発生しました:', err);
+      return res.status(500).send('画像の保存中にエラーが発生しました');
+    }
+
+    res.status(200).send('画像が正常にアップロードされました');
+  });
 });
 
 
