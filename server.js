@@ -107,31 +107,40 @@ app.get('/files', (req, res) => {
 // ファイルアップロード
 app.post('/upload', upload.single('file'), (req, res) => {
   try {
-      // 日付を取得してフォルダ名を生成
-      const today = new Date();
-      const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, '');
+    if (!req.file) {
+      return res.status(400).send('No file uploaded.');
+    }
 
-      // 保存先ディレクトリ: baseDirの親フォルダの中にdailyフォルダを作成
-      const dailyDir = path.join(path.dirname(baseDir), 'daily', yyyyMMdd);
+    // 日付を取得してフォルダ名を生成
+    const today = new Date();
+    const yyyyMMdd = today.toISOString().split('T')[0].replace(/-/g, '');
 
-      // 必要ならフォルダを再帰的に作成
-      if (!fs.existsSync(dailyDir)) {
-          fs.mkdirSync(dailyDir, { recursive: true });
-      }
+    // 保存先ディレクトリ
+    const dailyDir = path.join(path.dirname(baseDir), 'daily', yyyyMMdd);
 
-      // アップロードされたファイルの保存先パス
-      const destPath = path.join(dailyDir, req.file.originalname);
+    // 必要ならフォルダを再帰的に作成
+    if (!fs.existsSync(dailyDir)) {
+      fs.mkdirSync(dailyDir, { recursive: true });
+    }
 
-      // ファイルを指定した場所に移動
-      fs.renameSync(req.file.path, destPath);
+    // アップロードされたファイルの保存先パス
+    const destPath = path.join(dailyDir, req.file.originalname);
 
-      console.log(`File uploaded to: ${destPath}`);
-      res.status(200).send('File uploaded successfully');
+    // ファイル移動の代わりにコピーを使用
+    fs.copyFileSync(req.file.path, destPath);
+    console.log(`File uploaded to: ${destPath}`);
+
+    // アップロード後、一時ファイルを削除
+    fs.unlinkSync(req.file.path);
+
+    return res.status(200).send('File uploaded successfully');
   } catch (err) {
-      console.error('Error during file upload:', err);
-      res.status(500).send('File upload failed');
+    console.error('Error during file upload:', err);
+    return res.status(500).send('File upload failed');
   }
 });
+
+
 
 // 画像を受け取るエンドポイント
 app.post('/upload-image', upload.single('file'), (req, res) => {
